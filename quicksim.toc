@@ -1,0 +1,9 @@
+## Interface: 30400
+## Title: Quicksim
+## Author: Neverstar // Alustin
+## Version: v0.0.1
+## Notes: Gear export for simulation
+
+## Quicksim.xml
+json.lua
+quicksim.lua
