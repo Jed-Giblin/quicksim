@@ -1,5 +1,9 @@
 local addonName, NS = ...
-
+local tt = CreateFrame("GameTooltip", "QuickSimTT", UIParent, "GameTooltipTemplate")
+    tt:SetOwner(UIParent, "ANCHOR_PRESERVE")
+    tt:SetPoint("CENTER", "UIParent")
+    tt:Hide()
+local PLAIN_LETTER = 8383 -- Plain Letter stationery item id, "always" cached (for enchants)
 local slots = {"HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", 
 "WristSlot", "WaistSlot", "LegsSlot", "FeetSlot", "HandsSlot", "Finger0Slot",
  "Finger1Slot", "Trinket0Slot", "Trinket1Slot", "MainHandSlot", "SecondaryHandSlot", "RangedSlot"}
@@ -129,14 +133,40 @@ local function ConfigFrame(text)
     return QuickSimFrame
 end
 
+local function GetEnchant(id)
+    local link = ("item:%i:%i"):format(PLAIN_LETTER, id)
+    print(link)
+    -- tt:Show()
+    tt:SetOwner(UIParent, "ANCHOR_PRESERVE")
+	tt:SetHyperlink("spell:1:QuickSimTT")
+	tt:SetHyperlink(link)
+    local text = _G["QuickSimTTText" .. "Left" .. 3]:GetText()
+    tt:Hide()
+    return text, ("|cffffff00%s|r"):format(text)
+    -- return ""
+end
+
+local function trim(s)
+    return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
+end
+
 local function GenerateJson()
     local items = {}
     for _, slotName in ipairs(slots) do
+        local itemDetail = {}
         local slotId = GetInventorySlotInfo(slotName)
         local itemLink = GetInventoryItemLink("player", slotId)
         local itemName, _, _, itemLevel, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
-        local itemId = select(3, strfind(itemLink, "item:(%d+)"))
-        local itemDetail = {}
+        local _, _, _, _, itemId, enchant, gem1, gem2, gem3, gem4,
+        _, _, _, _ = string.find(itemLink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+):?(%d*):?(%d*):?(%d*):?(%d*):?(%d*):?(%-?%d*):?(%-?%d*):?(%d*):?(%d*):?(%-?%d*)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
+        print(enchant .. " id on " .. itemName )
+        if enchant ~= "" then
+            itemDetail["enchant"] = {}
+            local enchantDetail = {}
+            enchantDetail["id"] = enchant
+            -- enchantDetail["name"] = GetEnchant(enchant)
+            itemDetail["enchant"] = enchantDetail
+        end
         itemDetail["name"] = itemName
         itemDetail["id"] = tonumber(itemId)
         -- itemDetail["gems"] = {}
