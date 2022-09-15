@@ -1,9 +1,4 @@
 local addonName, NS = ...
-local tt = CreateFrame("GameTooltip", "QuickSimTT", UIParent, "GameTooltipTemplate")
-    tt:SetOwner(UIParent, "ANCHOR_PRESERVE")
-    tt:SetPoint("CENTER", "UIParent")
-    tt:Hide()
-local PLAIN_LETTER = 8383 -- Plain Letter stationery item id, "always" cached (for enchants)
 local slots = {"HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", 
 "WristSlot", "WaistSlot", "LegsSlot", "FeetSlot", "HandsSlot", "Finger0Slot",
  "Finger1Slot", "Trinket0Slot", "Trinket1Slot", "MainHandSlot", "SecondaryHandSlot", "RangedSlot"}
@@ -43,9 +38,7 @@ xformSlot["MainHandSlot"] = "Weapon";
 xformSlot["SecondaryHandSlot"] = "Shield";
 
 local QuickSimFrame = nil
-local fullData = {}
-fullData["stats"] = {}
-fullData["items"] = {}
+
 
 local function GetCharacterInfo()
     local info = {}
@@ -57,7 +50,7 @@ local function GetCharacterInfo()
     return info
 end
 
-local function GetStats()
+--[[ local function GetStats()
     local stats = {}
     _, stats["strength"], _, _ = UnitStat("player", 1)
     _, stats["agility"], _, _ = UnitStat("player", 2)
@@ -68,97 +61,81 @@ local function GetStats()
     stats["fireDamage"] = GetSpellBonusDamage(3)
     stats["frostDamage"] = GetSpellBonusDamage(5)
     stats["crit"] = GetCritChance()
-    local statList = { "agility",  "arcaneDamage",  "armor",  "attackPower",  "crit",  "critRating",  "defense",  "dodge",  "feralAttackPower",  "fireDamage",  "frostDamage",  "haste",  "hasteRating",  "healing",  "health",  "hit",  "holyDamage",  "intellect",  "mainHandSpeed",  "mana",  "mp5",  "natureDamage",  "parry",  "shadowDamage",  "shadowResist",  "spellCrit",  "spellDamage",  "spellHaste",  "spellHit",  "spirit",  "stamina",  "strength" }
     return stats
-end
+end ]]
 
 local function ConfigFrame(text)
-    if not QuickSimFrame then
-        local f = CreateFrame("Frame", "QuickSimFrame", UIParent, "DialogBoxFrame")
-        f:ClearAllPoints()
-        f:SetMovable(true)
-        -- local frameConfig = { "point": "CENTER", "relativeFrame"= nil, "relativePoint" = "CENTER", "ofsx" = 0, "ofsy" = 0, "width": 750, "height"= 400}
-        f:SetPoint(
-        "CENTER",
-        nil,
-        "CENTER",
-        0,
-        0
-        )
-        f:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight",
-            edgeSize = 16,
-            insets = { left = 8, right = 8, top = 8, bottom = 8 },
-        }
-        )
-        f:SetSize(750, 400)
-        f:SetClampedToScreen(true)
-        f:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-            self:StartMoving()
-            end
+    local f = CreateFrame("Frame", "QuickSimFrame", UIParent, "DialogBoxFrame")
+    f:ClearAllPoints()
+    f:SetMovable(true)
+    -- local frameConfig = { "point": "CENTER", "relativeFrame"= nil, "relativePoint" = "CENTER", "ofsx" = 0, "ofsy" = 0, "width": 750, "height"= 400}
+    f:SetPoint(
+    "CENTER",
+    nil,
+    "CENTER",
+    0,
+    0
+    )
+    f:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight",
+        edgeSize = 16,
+        insets = { left = 8, right = 8, top = 8, bottom = 8 },
+    }
+    )
+    f:SetSize(750, 400)
+    f:SetClampedToScreen(true)
+    f:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+        self:StartMoving()
         end
-        )
-        f:SetScript("OnMouseUp", function(self, button)
-            self:StopMovingOrSizing()
-        end
-        )
-        local sf = CreateFrame("ScrollFrame", "QuickSimScrollFrame", f, "UIPanelScrollFrameTemplate")
-        sf:SetPoint("LEFT", 16, 0)
-        sf:SetPoint("RIGHT", -32, 0)
-        sf:SetPoint("TOP", 0, -32)
-        
-        local eb = CreateFrame("EditBox", "QuickSimEditBox", QuickSimScrollFrame)
-        eb:SetSize(sf:GetSize())
-        eb:SetMultiLine(true)
-        eb:SetAutoFocus(true)
-        eb:SetFontObject("ChatFontNormal")
-        eb:SetScript("OnEscapePressed", function() f:Hide() end)
-        sf:SetScrollChild(eb)
-        f:SetResizable(true)
-        f:SetMinResize(150, 100)
-        local rb = CreateFrame("Button", "QuickSimResizeButton", f)
-        rb:SetPoint("BOTTOMRIGHT", -6, 7)
-        rb:SetSize(16, 16)
-
-        rb:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-        rb:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-        rb:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-        rb:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                f:StartSizing("BOTTOMRIGHT")
-                self:GetHighlightTexture():Hide() -- more noticeable
-            end
-        end
-        )
-        rb:SetScript("OnMouseUp", function(self, button)
-            f:StopMovingOrSizing()
-            self:GetHighlightTexture():Show()
-            eb:SetWidth(sf:GetWidth())
-
-            -- save size between sessions
-            frameConfig.width = f:GetWidth()
-            frameConfig.height = f:GetHeight()
-        end
-        )
-        QuickSimFrame = f
     end
-    QuickSimEditBox:SetText(text)
-    QuickSimEditBox:HighlightText()
-    return QuickSimFrame
-end
+    )
+    f:SetScript("OnMouseUp", function(self, button)
+        self:StopMovingOrSizing()
+    end
+    )
+    local sf = CreateFrame("ScrollFrame", "QuickSimScrollFrame", f, "UIPanelScrollFrameTemplate")
+    sf:SetPoint("LEFT", 16, 0)
+    sf:SetPoint("RIGHT", -32, 0)
+    sf:SetPoint("TOP", 0, -32)
+    
+    local eb = CreateFrame("EditBox", "QuickSimEditBox", QuickSimScrollFrame)
+    eb:SetSize(sf:GetSize())
+    eb:SetMultiLine(true)
+    eb:SetAutoFocus(true)
+    eb:SetFontObject("ChatFontNormal")
+    eb:SetScript("OnEscapePressed", function() f:Hide() end)
+    sf:SetScrollChild(eb)
+    f:SetResizable(true)
+    f:SetMinResize(150, 100)
+    local rb = CreateFrame("Button", "QuickSimResizeButton", f)
+    rb:SetPoint("BOTTOMRIGHT", -6, 7)
+    rb:SetSize(16, 16)
 
-local function GetEnchant(id)
-    local link = ("item:%i:%i"):format(PLAIN_LETTER, id)
-    -- tt:Show()
-    tt:SetOwner(UIParent, "ANCHOR_PRESERVE")
-	tt:SetHyperlink("spell:1:QuickSimTT")
-	tt:SetHyperlink(link)
-    local text = _G["QuickSimTTText" .. "Left" .. 3]:GetText()
-    tt:Hide()
-    return text, ("|cffffff00%s|r"):format(text)
-    -- return ""
+    -- rb:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    -- rb:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    -- rb:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    rb:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            f:StartSizing("BOTTOMRIGHT")
+        end
+    end
+    )
+    rb:SetScript("OnMouseUp", function(self, button)
+        f:StopMovingOrSizing()
+        eb:SetWidth(sf:GetWidth())
+    end
+    )
+    eb:SetText(text)
+    eb:HighlightText()
+    f:SetScript("OnHide", 
+        function()
+            eb:SetText("")
+            collectgarbage("collect")
+        end
+    )
+    f:Show()
 end
 
 local function trim(s)
@@ -174,66 +151,100 @@ end
 local function stringStarts(String,Start)
     return string.sub(String,1,string.len(Start))==Start
 end
+
+local function getGemDetails(gem)
+    if gem == nil then
+        return nil
+    end
+
+    local gemInfo = {}
+    gemInfo["id"] = tonumber(gem)
+    gemInfo["name"] = GetItemInfo(gem)
+    return gemInfo
+end
+
+local function getEnchantDetails(enchant, slotName, qsEnchantDict)
+    local enchantDetail = {}
+    enchantDetail["id"] = tonumber(enchant)
+    local enchantDbEntryToUse = nil
+
+    if qsEnchantDict[enchant] then
+        if tablelength(qsEnchantDict[enchant]) > 1 then
+            for _, enchantDbRecord in ipairs(qsEnchantDict[enchant]) do
+                local lookupVal = xformSlot[slotName]
+                if string.find(enchantDbRecord["name"], ".*" .. lookupVal .. ".*") then
+                    enchantDbEntryToUse = enchantDbRecord
+                end
+            end
+        end
+        if enchantDbEntryToUse == nil then
+            local iter = pairs(qsEnchantDict[enchant])
+            _, enchantDbEntryToUse = iter(qsEnchantDict[enchant])
+        end
+        if stringStarts(enchantDbEntryToUse["name"], "Enchant ") then
+            enchantDetail["spellId"] = tonumber(enchantDbEntryToUse["spell_id"])
+        else
+            enchantDetail["itemId"] = tonumber(enchantDbEntryToUse["spell_id"])
+        end
+        enchantDetail["name"] = enchantDbEntryToUse["name"]
+    end
+    return enchantDbEntryToUse
+end
  
 
 local function GenerateJson()
     local items = {}
+    local qsEnchantDict = NS.json.decode(NS.enchantDict)
     for _, slotName in ipairs(slots) do
         local itemDetail = {}
         local slotId = GetInventorySlotInfo(slotName)
         local itemLink = GetInventoryItemLink("player", slotId)
-        local itemName, _, _, itemLevel, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
-        local _, _, _, _, itemId, enchant, gem1, gem2, gem3, gem4,
-        _, _, _, _ = string.find(itemLink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+):?(%d*):?(%d*):?(%d*):?(%d*):?(%d*):?(%-?%d*):?(%-?%d*):?(%d*):?(%d*):?(%-?%d*)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
-        if enchant ~= "" then
-            itemDetail["enchant"] = {}
-            local enchantDetail = {}
-            enchantDetail["id"] = tonumber(enchant)
-            print("Getting enchant details from " .. itemName .. " which is a " .. slotName .. " with id " .. enchant)
-            local enchantDbEntryToUse = nil
-            if qsEnchantDict[enchant] then
-                if tablelength(qsEnchantDict[enchant]) > 1 then
-                    for _, enchantDbRecord in ipairs(qsEnchantDict[enchant]) do
-                        local lookupVal = xformSlot[slotName]
-                        if string.find(enchantDbRecord["name"], ".*" .. lookupVal .. ".*") then
-                            enchantDbEntryToUse = enchantDbRecord
-                        end
-                    end
-                end
-                if enchantDbEntryToUse == nil then
-                    local iter = pairs(qsEnchantDict[enchant])
-                    _, enchantDbEntryToUse = iter(qsEnchantDict[enchant])
-                end
-                if stringStarts(enchantDbEntryToUse["name"], "Enchant ") then
-                    enchantDetail["spellId"] = tonumber(enchantDbEntryToUse["spell_id"])
-                else
-                    enchantDetail["itemId"] = tonumber(enchantDbEntryToUse["spell_id"])
-                end
-                enchantDetail["name"] = enchantDbEntryToUse["name"]
+        if itemLink ~= nil then
+            local itemName, _, _, itemLevel, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
+            local _, _, _, _, itemId, enchant, gem1, gem2, gem3, gem4,
+            _, _, _, _ = string.find(itemLink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+):?(%d*):?(%d*):?(%d*):?(%d*):?(%d*):?(%-?%d*):?(%-?%d*):?(%d*):?(%d*):?(%-?%d*)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
+            local gems = { gem1, gem2, gem3, gem4 }
+
+            -- Is the item enchanted?
+            if enchant ~= "" then
+                itemDetail["enchant"] = {}
+                local enchantDetail = getEnchantDetails(enchant, slotName, qsEnchantDict)
+                itemDetail["enchant"] = enchantDetail
             end
-            -- enchantDetail["name"] = GetEnchant(enchant)
-            itemDetail["enchant"] = enchantDetail
+
+            -- Do we include gems?
+            if tablelength(gems) > 0 then
+                itemDetail["gems"] = {}
+                for _, val in pairs(gems) do
+                    if val ~= "" then
+                        table.insert(itemDetail["gems"], getGemDetails(val))
+                        -- print("There are " .. tablelength(itemDetail["gems"]) .. " gems in " .. slotName)
+                    end
+                    
+                end
+            end
+            
+            itemDetail["name"] = itemName
+            itemDetail["id"] = tonumber(itemId)
+            itemDetail["slot"] = slotMap[slotName]
+            table.insert(items, itemDetail)
         end
-        itemDetail["name"] = itemName
-        itemDetail["id"] = tonumber(itemId)
-        itemDetail["gems"] = {}
-        -- itemDetail["gems"] = {}
-        itemDetail["slot"] = slotMap[slotName]
-        -- itemDetail["enchant"] = {}
-        
-        table.insert(items, itemDetail)
     end
     return items
 end
 
 local function CommandHook(msg, editbox)
+    local fullData = {}
+    -- fullData["stats"] = {}
+    fullData["items"] = {}
     fullData["items"] = GenerateJson()
-    fullData["stats"] = GetStats()
+    -- fullData["stats"] = GetStats()
     fullData["name"] = GetUnitName("player") .. " QuickSimExport"
     fullData["character"] = GetCharacterInfo()
-    local f = ConfigFrame(NS.json.encode(fullData))
-    f:Show()
+    ConfigFrame(NS.json.encode(fullData))
+    fullData = nil
 end
-qsEnchantDict = NS.json.decode(NS.enchantDict)
+
+
 SLASH_QUICKSIM1 = "/quicksim"
 SlashCmdList["QUICKSIM"] = CommandHook
