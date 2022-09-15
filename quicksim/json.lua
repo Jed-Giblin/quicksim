@@ -388,4 +388,4 @@ function json.decode(str)
 end
 
 NS.json.encode = encode
-NS.json.decode = decode
+NS.json.decode = json.decode

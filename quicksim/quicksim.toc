@@ -6,4 +6,5 @@
 
 ## Quicksim.xml
 json.lua
+data.lua
 quicksim.lua

@@ -26,6 +26,22 @@ slotMap["MainHandSlot"] = "MAIN_HAND";
 slotMap["SecondaryHandSlot"] = "OFF_HAND";
 slotMap["RangedSlot"] = "RANGED";
 
+local xformSlot = {}
+xformSlot["HeadSlot"] = "Head";
+xformSlot["NeckSlot"] = "Neck";
+xformSlot["ShoulderSlot"] = "Shoulders";
+xformSlot["BackSlot"] = "Cloak";
+xformSlot["ChestSlot"] = "Chest";
+xformSlot["WristSlot"] = "Bracers";
+xformSlot["WaistSlot"] = "Waist";
+xformSlot["LegsSlot"] = "Legs";
+xformSlot["FeetSlot"] = "Boots";
+xformSlot["HandsSlot"] = "Gloves";
+xformSlot["Finger0Slot"] = "Ring";
+xformSlot["Finger1Slot"] = "Ring";
+xformSlot["MainHandSlot"] = "Weapon";
+xformSlot["SecondaryHandSlot"] = "Shield";
+
 local QuickSimFrame = nil
 local fullData = {}
 fullData["stats"] = {}
@@ -135,7 +151,6 @@ end
 
 local function GetEnchant(id)
     local link = ("item:%i:%i"):format(PLAIN_LETTER, id)
-    print(link)
     -- tt:Show()
     tt:SetOwner(UIParent, "ANCHOR_PRESERVE")
 	tt:SetHyperlink("spell:1:QuickSimTT")
@@ -150,6 +165,17 @@ local function trim(s)
     return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 end
 
+local function tablelength(T)
+    local count = 0
+    for _ in pairs(T) do count = count + 1 end
+    return count
+end
+  
+local function stringStarts(String,Start)
+    return string.sub(String,1,string.len(Start))==Start
+end
+ 
+
 local function GenerateJson()
     local items = {}
     for _, slotName in ipairs(slots) do
@@ -159,19 +185,42 @@ local function GenerateJson()
         local itemName, _, _, itemLevel, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
         local _, _, _, _, itemId, enchant, gem1, gem2, gem3, gem4,
         _, _, _, _ = string.find(itemLink, "|?c?f?f?(%x*)|?H?([^:]*):?(%d+):?(%d*):?(%d*):?(%d*):?(%d*):?(%d*):?(%-?%d*):?(%-?%d*):?(%d*):?(%d*):?(%-?%d*)|?h?%[?([^%[%]]*)%]?|?h?|?r?")
-        print(enchant .. " id on " .. itemName )
         if enchant ~= "" then
             itemDetail["enchant"] = {}
             local enchantDetail = {}
-            enchantDetail["id"] = enchant
+            enchantDetail["id"] = tonumber(enchant)
+            print("Getting enchant details from " .. itemName .. " which is a " .. slotName .. " with id " .. enchant)
+            local enchantDbEntryToUse = nil
+            if qsEnchantDict[enchant] then
+                if tablelength(qsEnchantDict[enchant]) > 1 then
+                    for _, enchantDbRecord in ipairs(qsEnchantDict[enchant]) do
+                        local lookupVal = xformSlot[slotName]
+                        if string.find(enchantDbRecord["name"], ".*" .. lookupVal .. ".*") then
+                            enchantDbEntryToUse = enchantDbRecord
+                        end
+                    end
+                end
+                if enchantDbEntryToUse == nil then
+                    local iter = pairs(qsEnchantDict[enchant])
+                    _, enchantDbEntryToUse = iter(qsEnchantDict[enchant])
+                end
+                if stringStarts(enchantDbEntryToUse["name"], "Enchant ") then
+                    enchantDetail["spellId"] = tonumber(enchantDbEntryToUse["spell_id"])
+                else
+                    enchantDetail["itemId"] = tonumber(enchantDbEntryToUse["spell_id"])
+                end
+                enchantDetail["name"] = enchantDbEntryToUse["name"]
+            end
             -- enchantDetail["name"] = GetEnchant(enchant)
             itemDetail["enchant"] = enchantDetail
         end
         itemDetail["name"] = itemName
         itemDetail["id"] = tonumber(itemId)
+        itemDetail["gems"] = {}
         -- itemDetail["gems"] = {}
         itemDetail["slot"] = slotMap[slotName]
         -- itemDetail["enchant"] = {}
+        
         table.insert(items, itemDetail)
     end
     return items
@@ -179,12 +228,12 @@ end
 
 local function CommandHook(msg, editbox)
     fullData["items"] = GenerateJson()
-    -- fullData["stats"] = GetStats()
-    fullData["name"] = GetUnitName("player") .. "-QuickSimExport"
+    fullData["stats"] = GetStats()
+    fullData["name"] = GetUnitName("player") .. " QuickSimExport"
     fullData["character"] = GetCharacterInfo()
     local f = ConfigFrame(NS.json.encode(fullData))
     f:Show()
 end
-
+qsEnchantDict = NS.json.decode(NS.enchantDict)
 SLASH_QUICKSIM1 = "/quicksim"
 SlashCmdList["QUICKSIM"] = CommandHook
