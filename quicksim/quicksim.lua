@@ -188,7 +188,7 @@ local function getEnchantDetails(enchant, slotName, qsEnchantDict)
         end
         enchantDetail["name"] = enchantDbEntryToUse["name"]
     end
-    return enchantDbEntryToUse
+    return enchantDetail
 end
  
 
